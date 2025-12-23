@@ -1,0 +1,82 @@
+from manim import *
+
+# ---------- Background ----------
+BACKGROUND_COLOR = "#0b132b"
+
+# ---------- Colors ----------
+TEXT_COLOR = WHITE
+NEGATIVE_COLOR = "#5DADE2"  # Light blue
+POSITIVE_COLOR = "#EC7063"  # Light red
+ATOM_OUTLINE_COLOR = WHITE
+
+# ---------- Fonts ----------
+SIGN_FONT_SIZE = 38  # Size of + and - symbols
+TEXT_FONT_SIZE = 28  # Text size
+LINE_SPACING = 1.4   # Vertical spacing between lines
+
+# ---------- Layout ----------
+GRAPHICS_AREA_X = 3.5
+
+class NeutralAtom(Scene):
+    def construct(self):
+        # Set background color
+        self.camera.background_color = BACKGROUND_COLOR
+
+        # ---------------- Text ----------------
+        description = Text(
+            "In neutral material,\nPositive and negative charges are balanced.",
+            font="Arial",
+            font_size=TEXT_FONT_SIZE,
+            color=TEXT_COLOR,
+            line_spacing=LINE_SPACING
+        )
+        description.to_edge(LEFT)
+
+        # ---------------- Atom ----------------
+        atom_radius = 1.0  # Larger atom radius
+
+        # Outer circle of the atom
+        atom_outline = Circle(
+            radius=atom_radius,
+            stroke_width=4,
+            color=ATOM_OUTLINE_COLOR,
+            fill_opacity=0
+        )
+
+        # Left half: light blue (negative)
+        negative_fill = Sector(
+            radius=atom_radius-0.05,
+            start_angle=PI/2,
+            angle=PI,
+            color=NEGATIVE_COLOR,
+            fill_opacity=1,
+            stroke_width=0
+        )
+
+        # Right half: light red (positive)
+        positive_fill = Sector(
+            radius=atom_radius-0.05,
+            start_angle=-PI/2,
+            angle=PI,
+            color=POSITIVE_COLOR,
+            fill_opacity=1,
+            stroke_width=0
+        )
+
+        # ---------------- Symbols ----------------
+        negative_sign = Text("-", font_size=SIGN_FONT_SIZE, color=TEXT_COLOR)
+        positive_sign = Text("+", font_size=SIGN_FONT_SIZE, color=TEXT_COLOR)
+
+        # Position symbols: - on left, + on right
+        negative_sign.move_to(atom_outline.get_center() + LEFT*0.35)
+        positive_sign.move_to(atom_outline.get_center() + RIGHT*0.35)
+
+        # ---------------- Grouping ----------------
+        atom_group = VGroup(atom_outline, negative_fill, positive_fill, negative_sign, positive_sign)
+        atom_group.move_to(RIGHT*GRAPHICS_AREA_X)
+
+        # ---------------- Animation ----------------
+        self.play(FadeIn(description, shift=LEFT))
+        self.wait(0.5)
+        self.play(FadeIn(atom_group, shift=RIGHT))
+        self.wait(1)
