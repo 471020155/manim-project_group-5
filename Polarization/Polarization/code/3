@@ -1,0 +1,67 @@
+from manim import *
+
+BACKGROUND_COLOR = "#0b132b"
+TEXT_COLOR = WHITE
+NEGATIVE_COLOR = "#5DADE2"
+POSITIVE_COLOR = "#EC7063"
+ATOM_OUTLINE_COLOR = WHITE
+DIVIDER_COLOR = GREY
+
+SIGN_FONT_SIZE = 25
+TEXT_FONT_SIZE = 28
+LINE_SPACING = 2.0
+
+
+class NeutralAtom(Scene):
+    def construct(self):
+        self.camera.background_color = BACKGROUND_COLOR
+
+        # Divider
+        divider = Line(LEFT * 7, RIGHT * 7, color=DIVIDER_COLOR, stroke_width=2)
+        divider.move_to(UP * 2)
+        self.add(divider)
+
+        # Text
+        description = Text(
+            "In neutral material,\nPositive and negative charges are balanced.",
+            font="Arial",
+            font_size=TEXT_FONT_SIZE,
+            color=TEXT_COLOR,
+            line_spacing=LINE_SPACING
+        ).to_edge(LEFT).shift(DOWN * 3)
+
+        # Atom
+        r = 0.7
+        outline = Circle(radius=r, stroke_width=3, color=ATOM_OUTLINE_COLOR)
+
+        neg_fill = Sector(
+            radius=r - 0.03,
+            start_angle=PI / 2,
+            angle=PI,
+            color=NEGATIVE_COLOR,
+            fill_opacity=1,
+            stroke_width=0
+        )
+
+        pos_fill = Sector(
+            radius=r - 0.03,
+            start_angle=-PI / 2,
+            angle=PI,
+            color=POSITIVE_COLOR,
+            fill_opacity=1,
+            stroke_width=0
+        )
+
+        neg_sign = Text("-", font_size=SIGN_FONT_SIZE).move_to(LEFT * 0.25)
+        pos_sign = Text("+", font_size=SIGN_FONT_SIZE).move_to(RIGHT * 0.25)
+
+        atom = VGroup(outline, neg_fill, pos_fill, neg_sign, pos_sign)
+        atom.to_edge(RIGHT).shift(DOWN * 3)
+
+        # Animation
+        self.play(
+            description.animate.move_to(UP * 3).to_edge(LEFT),
+            atom.animate.move_to(UP * 3).to_edge(RIGHT),
+            run_time=1.5
+        )
+        self.wait(1)
