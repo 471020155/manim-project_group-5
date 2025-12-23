@@ -10,7 +10,7 @@ FIELD_COLOR = RED
 
 SIGN_FONT_SIZE = 25
 TEXT_FONT_SIZE = 28
-
+LINE_SPACING = 2   # Vertical spacing between lines
 
 class LowerPartOnly(Scene):
     def construct(self):
@@ -19,13 +19,15 @@ class LowerPartOnly(Scene):
         atom_radius = 0.7
 
         # ================= 1️⃣ Text =================
-        text_below = Text(
-            "Applying electric field (E)",
-            font="Arial",
-            font_size=TEXT_FONT_SIZE,
-            color=TEXT_COLOR
-        ).to_edge(LEFT).shift(DOWN * 0.001)
+        line1 = Text("Applying electric field (E),", font_size=TEXT_FONT_SIZE, color=TEXT_COLOR)
+        line2 = Text("the material starts to", font_size=TEXT_FONT_SIZE, color=TEXT_COLOR)
+        line3 = Text("POLARIZE", font_size=TEXT_FONT_SIZE, color=TEXT_COLOR)
 
+        line2.next_to(line1, DOWN, buff=0.5)  # buff controls vertical spacing
+        line3.next_to(line2, DOWN, buff=0.5)
+
+        text_below = VGroup(line1, line2, line3).to_edge(LEFT)
+        self.play(FadeIn(text_below))
         self.play(FadeIn(text_below))
         self.wait(0.5)
 
