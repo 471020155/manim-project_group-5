@@ -1,13 +1,14 @@
 from manim import *
 
 # ---------- Background ----------
-BACKGROUND_COLOR = "#0b132b"   # كحلي غامق
+BACKGROUND_COLOR = "#0b132b"   # Dark navy blue
 
 # ---------- Colors ----------
 TEXT_COLOR = WHITE
 
 # ---------- Fonts ----------
 FONT_SIZE_BIG = 72   
+FONT_SIZE_SMALL = 25   # Font size for additional text
 
 # ---------- Timing ----------
 DEFAULT_RUN_TIME = 1
@@ -17,6 +18,7 @@ class PolarizationIntro(Scene):
     def construct(self):
         self.camera.background_color = BACKGROUND_COLOR
 
+        # Main title
         title = Text(
             "Polarization",
             font="Arial Black",
@@ -25,7 +27,35 @@ class PolarizationIntro(Scene):
             color=TEXT_COLOR
         )
 
-        self.play(Write(title), run_time=DEFAULT_RUN_TIME)
+        # Additional text under the title
+        subtitle = Text(
+            "Dipoles in DIELECTRIC materials",
+            font="Arial",
+            font_size=FONT_SIZE_SMALL,
+            color=TEXT_COLOR
+        )
+        
+        # Position additional text directly under the title
+        subtitle.next_to(title, DOWN, buff=0.3)
+        
+        # Group title and additional text together
+        title_group = VGroup(title, subtitle)
+        title_group.move_to(ORIGIN)  # Move group to center
+
+        # Display title and additional text together
+        self.play(
+            Write(title),
+            FadeIn(subtitle, shift=UP*0.5),
+            run_time=DEFAULT_RUN_TIME
+        )
+        
         self.wait(WAIT_MEDIUM)
-        self.play(FadeOut(title), run_time=DEFAULT_RUN_TIME)
+        
+        # Hide everything together
+        self.play(
+            FadeOut(title),
+            FadeOut(subtitle),
+            run_time=DEFAULT_RUN_TIME
+        )
+        
         self.wait(0.5)
