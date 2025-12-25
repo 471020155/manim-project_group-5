@@ -7,6 +7,7 @@ NEGATIVE_COLOR = "#5DADE2"
 POSITIVE_COLOR = "#EC7063"
 ATOM_OUTLINE_COLOR = WHITE
 FIELD_COLOR = RED
+INTERNAL_FIELD_COLOR = YELLOW  # Added color for internal field arrow
 
 SIGN_FONT_SIZE = 25
 TEXT_FONT_SIZE = 28
@@ -125,4 +126,57 @@ class ElectronicPolarization(Scene):
             run_time=1.5
         )
 
-        self.wait(1)
+        self.wait(0.5)
+
+        # ================= Add internal electric field arrow =================
+        # Create small arrow inside the ellipse (from + to -)
+        internal_arrow = Arrow(
+            start=positive_sign_ellipse.get_center() + LEFT * 0.2,
+            end=negative_sign_ellipse.get_center() + RIGHT * 0.2,
+            color=INTERNAL_FIELD_COLOR,
+            stroke_width=4,
+            buff=0.1,
+            max_tip_length_to_length_ratio=0.3
+        )
+        
+        # Add label for internal field
+        internal_label = Text(
+            "Internal E-field",
+            font_size=18,
+            color=INTERNAL_FIELD_COLOR
+        )
+        internal_label.next_to(internal_arrow, DOWN, buff=0.1)
+        
+        self.play(
+            GrowArrow(internal_arrow),
+            FadeIn(internal_label),
+            run_time=1.0
+        )
+        
+        # ================= Add connection line =================
+        connection_line = DashedLine(
+            start=positive_sign_ellipse.get_center(),
+            end=negative_sign_ellipse.get_center(),
+            color=TEXT_COLOR,
+            stroke_width=2,
+            dash_length=0.1
+        )
+        
+        self.play(Create(connection_line), run_time=0.8)
+        
+        
+
+        # ================= Summary text =================
+        summary_text = Text(
+            " ",
+            font_size=22,
+            color=TEXT_COLOR
+        )
+        summary_text.to_edge(DOWN, buff=0.5)
+        
+        self.play(FadeIn(summary_text))
+        
+        self.wait(2)
+
+        # Final hold
+        self.wait(2)
