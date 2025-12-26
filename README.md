@@ -32,7 +32,7 @@ Electronic
 
 Ionic
 
-Orientation (Dipolar)
+Orientation 
 
 ⁂ Current in a Capacitor
 
