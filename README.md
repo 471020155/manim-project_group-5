@@ -5,6 +5,7 @@ Manim animations project
 This project provides educational animations explaining key concepts in electromagnetics and how they are connected, from electric fields to currents in capacitors.
 
 -Topics & Order
+
 ⁂ Electric Field
 
 Electric field intensity and force.
