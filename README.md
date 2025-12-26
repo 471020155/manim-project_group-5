@@ -48,3 +48,14 @@ Python
 
 Manim
 
+# Members
+
+Jana Sayed
+
+Fatma Alzahraa Ibrahim
+
+Mariam Ahmed
+
+Mariam Abulmawaheb
+
+Lojien Diaa
