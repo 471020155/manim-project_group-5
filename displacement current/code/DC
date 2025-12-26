@@ -1,0 +1,548 @@
+from manim import *
+import numpy as np
+
+class ContinuousFlowInductionWithDipoles(Scene):
+    def construct(self):
+        # Setup
+        self.camera.background_color = "#0b132b"
+        
+        # ---------- Create Capacitor ----------
+        plate_height = 2.5
+        plate_width = 0.3
+        gap = 2.5
+        
+        # Adjust the entire capacitor position to be more to the LEFT
+        capacitor_x_offset = LEFT * 1.5  # Move capacitor 1.5 units to the left
+        
+        left_plate = Rectangle(
+            height=plate_height, 
+            width=plate_width,
+            fill_color=YELLOW,
+            fill_opacity=0.6,
+            stroke_color=YELLOW,
+            stroke_width=2
+        ).shift(LEFT * (gap/2 + plate_width/2) + capacitor_x_offset)  # Added offset
+        
+        right_plate = left_plate.copy().shift(RIGHT * (gap + plate_width))
+        
+        capacitor = VGroup(left_plate, right_plate)
+        self.play(Create(capacitor), run_time=1)
+        self.wait(0.3)
+        
+        # ---------- Create Circuit ----------
+        # Adjust wire positions accordingly
+        left_wire_start = left_plate.get_left() + LEFT * 2
+        right_wire_end = right_plate.get_right() + RIGHT * 2
+        
+        left_wire = Line(left_wire_start, left_plate.get_left(), 
+                        color="#CCCCCC", stroke_width=5)
+        right_wire = Line(right_plate.get_right(), right_wire_end, 
+                         color="#CCCCCC", stroke_width=5)
+        
+        bottom_y = left_wire_start[1] - 1.5
+        bottom_wire = Line(left_wire_start + DOWN*1.5, right_wire_end + DOWN*1.5,
+                          color="#CCCCCC", stroke_width=5)
+        
+        left_vertical = Line(left_wire_start, left_wire_start + DOWN*1.5,
+                           color="#CCCCCC", stroke_width=5)
+        right_vertical = Line(right_wire_end, right_wire_end + DOWN*1.5,
+                            color="#CCCCCC", stroke_width=5)
+        
+        wires = VGroup(left_wire, right_wire, left_vertical, bottom_wire, right_vertical)
+        self.play(Create(wires), run_time=1.5)
+        
+        # ---------- Add Battery ----------
+        battery_pos = bottom_wire.get_center() + DOWN * 0.4
+        
+        battery = VGroup(
+            Rectangle(height=0.7, width=0.4, 
+                     fill_color=WHITE, fill_opacity=1, 
+                     stroke_color=WHITE, stroke_width=2),
+            Line(UP*0.35, DOWN*0.35, color=BLACK, stroke_width=2),
+            Text("+", font_size=18, color=BLACK, weight=BOLD),
+            Text("−", font_size=18, color=BLACK, weight=BOLD),
+        )
+        battery.move_to(battery_pos)
+        
+        # وضع إشارتي + و - جنباً إلى جنب
+        battery[2].move_to(battery.get_center() + RIGHT * 0.15)  # + on right side
+        battery[3].move_to(battery.get_center() + LEFT * 0.15)   # - on left side
+        
+        self.play(Create(battery), run_time=0.8)
+        
+        # ---------- Title ----------
+        title = Text("Continuous Current Flow & Induction", color=YELLOW, font_size=24)
+        title.to_edge(UP)
+        self.play(Write(title))
+        
+        # ---------- Create DIPOLES in capacitor gap ----------
+        num_dipoles = 5
+        dipoles = []
+        dipole_positions = []
+        
+        # Calculate positions for dipoles (adjusted with capacitor offset)
+        for i in range(num_dipoles):
+            y_pos = -plate_height/2 + (i + 0.5) * (plate_height / num_dipoles)
+            x_pos = capacitor_x_offset[0]  # Center of gap with offset
+            
+            dipole_positions.append([x_pos, y_pos, 0])
+            
+            # Create dipole (arrow REVERSED - from negative to positive)
+            dipole_arrow = Arrow(
+                start=RIGHT * 0.3,
+                end=LEFT * 0.3,
+                color="#FFFF00",
+                stroke_width=2,
+                buff=0.1,
+                max_tip_length_to_length_ratio=0.25
+            )
+            
+            plus_sign = Text("+", font_size=12, color="#FF5555", weight=BOLD)
+            minus_sign = Text("-", font_size=12, color="#5555FF", weight=BOLD)
+            
+            plus_sign.next_to(dipole_arrow.get_start(), LEFT, buff=0.08)
+            minus_sign.next_to(dipole_arrow.get_end(), RIGHT, buff=0.08)
+            
+            dipole_group = VGroup(dipole_arrow, plus_sign, minus_sign)
+            dipole_group.move_to([x_pos, y_pos, 0])
+            dipoles.append(dipole_group)
+            
+            dipole_group.scale(0.3)
+            dipole_group.set_opacity(0.3)
+        
+        # Add dipoles to scene
+        dipoles_group = VGroup(*dipoles)
+        self.play(FadeIn(dipoles_group), run_time=1)
+        
+        # ---------- Create FLOW SYSTEM ----------
+        positive_path = VMobject()
+        positive_points = [
+            battery[0].get_right() + RIGHT*0.1,
+            battery[0].get_right() + RIGHT*0.8,
+            right_vertical.get_end(),
+            right_wire_end,
+            right_plate.get_right(),
+            right_plate.get_center()
+        ]
+        positive_path.set_points_smoothly(positive_points)
+        
+        electron_path = VMobject()
+        electron_points = [
+            left_plate.get_center(),
+            left_plate.get_left(),
+            left_wire_start,
+            left_vertical.get_end(),
+            battery[0].get_left() + LEFT*0.8,
+            battery[0].get_left() + UP*0.1
+        ]
+        electron_path.set_points_smoothly(electron_points)
+        
+        # ---------- EXPLANATION TEXTS ----------
+        explanation_texts = [
+            "1) Current flows → charges\n   accumulate on the plates.",
+            "2) Electric field increases.",
+            "3) Dipoles stretch and bound\n   charges move.",
+            "4) Bound charge motion creates\n   displacement current.",
+            "5) When charging stops,\n   dipoles stop moving.",
+            "6) Displacement  current \nstops."
+        ]
+        
+        # Create positions for explanation texts (on right side)
+        # Adjust position since capacitor moved left
+        explanation_positions = []
+        for i in range(len(explanation_texts)):
+            # Position on RIGHT side of screen, aligned to left edge
+            x_pos = right_plate.get_right()[0] + 4  # Reduced from 3.5 to 2.0 since capacitor moved left
+            y_pos = 2.5 - i * 0.8  # Start from top and go down
+            explanation_positions.append([x_pos, y_pos, 0])
+        
+        # Create all explanation texts but initially invisible
+        explanation_objects = []
+        for i, text in enumerate(explanation_texts):
+            explanation = Text(
+                text,
+                font="Arial",
+                font_size=18,
+                color=WHITE,
+                line_spacing=0.8
+            )
+            explanation.move_to(explanation_positions[i])
+            explanation.set_opacity(0)  # Initially invisible
+            explanation_objects.append(explanation)
+            self.add(explanation)
+        
+        # Track which explanation is currently shown
+        current_explanation_index = -1
+        
+        # ---------- CREATE CONTINUOUS FLOW ----------
+        total_charges_to_accumulate = 8
+        positive_positions = []
+        negative_positions = []
+        
+        rows = 4
+        cols = 2
+        for row in range(rows):
+            for col in range(cols):
+                if len(positive_positions) >= total_charges_to_accumulate:
+                    break
+                y = -1 + row * 0.5
+                x_offset = 0.08 + col * 0.05
+                positive_positions.append(right_plate.get_left() + RIGHT*x_offset + UP*y)
+                negative_positions.append(left_plate.get_right() + LEFT*x_offset + UP*y)
+        
+        accumulated_positive = []
+        accumulated_negative = []
+        
+        num_concurrent_charges = 4
+        positive_flow = []
+        electron_flow = []
+        
+        for i in range(num_concurrent_charges):
+            pos_charge = Dot(
+                battery[0].get_right() + RIGHT*0.1 + UP*(i*0.1 - 0.15),
+                color="#FFAA00",
+                radius=0.04,
+                fill_opacity=0.9
+            )
+            positive_flow.append(pos_charge)
+            self.add(pos_charge)
+            
+            elec_charge = Dot(
+                left_plate.get_center() + UP*(i*0.1 - 0.15),
+                color="#00AAFF",
+                radius=0.04,
+                fill_opacity=0.9
+            )
+            electron_flow.append(elec_charge)
+            self.add(elec_charge)
+        
+        # ---------- ELECTRIC FIELD ARROWS ----------
+        max_field_arrows = 8
+        field_arrows_group = VGroup()
+        
+        arrow_positions = []
+        for i in range(max_field_arrows):
+            y = -1.2 + (i / (max_field_arrows - 1)) * 2.4 if max_field_arrows > 1 else 0
+            start = right_plate.get_left() + LEFT*0.08 + UP*y
+            end = left_plate.get_right() + RIGHT*0.08 + UP*y
+            arrow_positions.append((start, end))
+        
+        self.add(field_arrows_group)
+        
+        # ---------- MAIN ANIMATION LOOP ----------
+        accumulated_count = 0
+        
+        for charge_num in range(total_charges_to_accumulate):
+            # Show first explanation when animation starts
+            if accumulated_count == 0 and current_explanation_index < 0:
+                current_explanation_index = 0
+                self.play(
+                    explanation_objects[current_explanation_index].animate.set_opacity(1),
+                    run_time=0.5
+                )
+            
+            # Animate current flow
+            animations = []
+            
+            for i in range(num_concurrent_charges):
+                if positive_flow[i] is not None:
+                    animations.append(
+                        MoveAlongPath(
+                            positive_flow[i],
+                            positive_path,
+                            rate_func=linear,
+                            run_time=1.8
+                        )
+                    )
+                
+                if electron_flow[i] is not None:
+                    animations.append(
+                        MoveAlongPath(
+                            electron_flow[i],
+                            electron_path,
+                            rate_func=linear,
+                            run_time=1.8
+                        )
+                    )
+            
+            if animations:
+                self.play(*animations, run_time=1.8)
+            
+            # Process accumulation
+            if accumulated_count < total_charges_to_accumulate:
+                # Create accumulated charges
+                pos_dot = Dot(
+                    positive_positions[accumulated_count],
+                    color="#FF5555",
+                    radius=0.06,
+                    fill_opacity=1
+                )
+                plus_sign = Text("+", font_size=16, color="#FF5555", weight=BOLD)
+                plus_sign.move_to(pos_dot.get_center())
+                pos_group = VGroup(pos_dot, plus_sign)
+                
+                neg_dot = Dot(
+                    negative_positions[accumulated_count],
+                    color="#5555FF",
+                    radius=0.06,
+                    fill_opacity=1
+                )
+                minus_sign = Text("−", font_size=16, color="#5555FF", weight=BOLD)
+                minus_sign.move_to(neg_dot.get_center())
+                neg_group = VGroup(neg_dot, minus_sign)
+                
+                # Find which charge to accumulate
+                for i in range(num_concurrent_charges):
+                    if (positive_flow[i] is not None and 
+                        positive_flow[i].get_center()[0] > right_plate.get_left()[0]):
+                        
+                        # Animate accumulation
+                        self.play(
+                            FadeOut(positive_flow[i]),
+                            FadeIn(pos_group),
+                            FadeIn(neg_group),
+                            run_time=0.3
+                        )
+                        
+                        accumulated_positive.append(pos_group)
+                        accumulated_negative.append(neg_group)
+                        accumulated_count += 1
+                        
+                        # Show second explanation after first accumulation
+                        if accumulated_count == 1 and current_explanation_index == 0:
+                            current_explanation_index = 1
+                            self.play(
+                                explanation_objects[current_explanation_index].animate.set_opacity(1),
+                                run_time=0.5
+                            )
+                        
+                        # ========== ANIMATE DIPOLES STRETCHING ==========
+                        stretch_factor = 0.3 + (accumulated_count / total_charges_to_accumulate) * 1.2
+                        opacity_factor = 0.3 + (accumulated_count / total_charges_to_accumulate) * 0.7
+                        
+                        # Create new stretched dipoles
+                        stretched_dipoles = []
+                        for j, pos in enumerate(dipole_positions):
+                            new_dipole_arrow = Arrow(
+                                start=RIGHT * (0.3 * stretch_factor),
+                                end=LEFT * (0.3 * stretch_factor),
+                                color="#FFFF00",
+                                stroke_width=1 + accumulated_count * 0.3,
+                                buff=0.1,
+                                max_tip_length_to_length_ratio=0.25
+                            )
+                            
+                            new_plus = Text("+", font_size=12 + accumulated_count, 
+                                          color="#FF5555", weight=BOLD)
+                            new_minus = Text("-", font_size=12 + accumulated_count, 
+                                           color="#5555FF", weight=BOLD)
+                            
+                            new_plus.next_to(new_dipole_arrow.get_start(), LEFT, buff=0.08)
+                            new_minus.next_to(new_dipole_arrow.get_end(), RIGHT, buff=0.08)
+                            
+                            new_dipole = VGroup(new_dipole_arrow, new_plus, new_minus)
+                            new_dipole.move_to(pos)
+                            new_dipole.set_opacity(opacity_factor)
+                            stretched_dipoles.append(new_dipole)
+                        
+                        # Show third explanation when dipoles start stretching
+                        if accumulated_count == 3 and current_explanation_index == 1:
+                            current_explanation_index = 2
+                            self.play(
+                                explanation_objects[current_explanation_index].animate.set_opacity(1),
+                                run_time=0.5
+                            )
+                        
+                        # Animate dipoles stretching
+                        self.play(
+                            *[Transform(dipoles[k], stretched_dipoles[k]) 
+                              for k in range(len(dipoles))],
+                            run_time=0.5
+                        )
+                        
+                        # Update dipoles list
+                        for k in range(len(dipoles)):
+                            dipoles[k] = stretched_dipoles[k]
+                        
+                        # INCREASE ELECTRIC FIELD ARROWS
+                        if accumulated_count >= 2:
+                            arrows_to_show = int((accumulated_count / total_charges_to_accumulate) * max_field_arrows)
+                            arrows_to_show = max(1, arrows_to_show)
+                            
+                            new_field_arrows = VGroup()
+                            for j in range(arrows_to_show):
+                                start, end = arrow_positions[j]
+                                progress = accumulated_count / total_charges_to_accumulate
+                                arrow_strength = 0.5 + progress * 3.5
+                                arrow_opacity = 0.3 + progress * 0.7
+                                
+                                arrow = Arrow(
+                                    start,
+                                    end,
+                                    color="#EC7063",
+                                    stroke_width=arrow_strength,
+                                    max_tip_length_to_length_ratio=0.08,
+                                    fill_opacity=arrow_opacity
+                                )
+                                new_field_arrows.add(arrow)
+                            
+                            if len(field_arrows_group) == 0:
+                                field_arrows_group = new_field_arrows
+                                self.add(field_arrows_group)
+                                self.play(
+                                    Create(field_arrows_group),
+                                    run_time=0.5
+                                )
+                            else:
+                                self.play(
+                                    Transform(field_arrows_group, new_field_arrows),
+                                    run_time=0.5
+                                )
+                        
+                        # Show fourth explanation when field arrows appear
+                        if accumulated_count == 5 and current_explanation_index == 2:
+                            current_explanation_index = 3
+                            self.play(
+                                explanation_objects[current_explanation_index].animate.set_opacity(1),
+                                run_time=0.5
+                            )
+                        
+                        # Reset charges for continuous flow
+                        positive_flow[i] = Dot(
+                            battery[0].get_right() + RIGHT*0.1 + UP*(i*0.1 - 0.15),
+                            color="#FFAA00",
+                            radius=0.04,
+                            fill_opacity=0.9
+                        )
+                        self.add(positive_flow[i])
+                        
+                        if electron_flow[i] is not None:
+                            self.remove(electron_flow[i])
+                        
+                        electron_flow[i] = Dot(
+                            left_plate.get_center() + UP*(i*0.1 - 0.15),
+                            color="#00AAFF",
+                            radius=0.04,
+                            fill_opacity=0.9
+                        )
+                        self.add(electron_flow[i])
+                        
+                        break
+            
+            if charge_num < total_charges_to_accumulate - 1:
+                self.wait(0.2)
+        
+        # ---------- CONTINUE FLOW ----------
+        for _ in range(2):
+            animations = []
+            for i in range(num_concurrent_charges):
+                if positive_flow[i] is not None:
+                    animations.append(
+                        MoveAlongPath(
+                            positive_flow[i],
+                            positive_path,
+                            rate_func=linear,
+                            run_time=1.5
+                        )
+                    )
+                if electron_flow[i] is not None:
+                    animations.append(
+                        MoveAlongPath(
+                            electron_flow[i],
+                            electron_path,
+                            rate_func=linear,
+                            run_time=1.5
+                        )
+                    )
+            
+            if animations:
+                self.play(*animations, run_time=1.5)
+            
+            for i in range(num_concurrent_charges):
+                if (positive_flow[i] is not None and 
+                    positive_flow[i].get_center()[0] > right_plate.get_left()[0]):
+                    self.remove(positive_flow[i])
+                    positive_flow[i] = Dot(
+                        battery[0].get_right() + RIGHT*0.1 + UP*(i*0.1 - 0.15),
+                        color="#FFAA00",
+                        radius=0.04,
+                        fill_opacity=0.9
+                    )
+                    self.add(positive_flow[i])
+                
+                if (electron_flow[i] is not None and 
+                    electron_flow[i].get_center()[0] < battery[0].get_left()[0] + 0.3):
+                    self.remove(electron_flow[i])
+                    electron_flow[i] = Dot(
+                        left_plate.get_center() + UP*(i*0.1 - 0.15),
+                        color="#00AAFF",
+                        radius=0.04,
+                        fill_opacity=0.9
+                    )
+                    self.add(electron_flow[i])
+            
+            self.wait(0.2)
+        
+        # ---------- GRADUALLY STOP CURRENT ----------
+        # Show fifth explanation when current starts stopping
+        if current_explanation_index == 3:
+            current_explanation_index = 4
+            self.play(
+                explanation_objects[current_explanation_index].animate.set_opacity(1),
+                run_time=0.5
+            )
+        
+        for i in range(num_concurrent_charges):
+            if positive_flow[i] is not None:
+                self.play(FadeOut(positive_flow[i]), run_time=0.3)
+            if electron_flow[i] is not None:
+                self.play(FadeOut(electron_flow[i]), run_time=0.3)
+            self.wait(0.1)
+        
+        # ---------- FINAL STATE ----------
+        final_title = Text("CAPACITOR FULLY CHARGED", color=YELLOW, font_size=24)
+        final_title.to_edge(UP)
+        
+        # Show final explanation
+        if current_explanation_index == 4:
+            current_explanation_index = 5
+            self.play(
+                explanation_objects[current_explanation_index].animate.set_opacity(1),
+                run_time=0.5
+            )
+        
+        self.play(
+            Transform(title, final_title),
+            run_time=1.5
+        )
+        
+        # ---------- FINAL ELECTRIC FIELD ----------
+        final_field_arrows = VGroup()
+        for start, end in arrow_positions:
+            arrow = Arrow(
+                start,
+                end,
+                color="#EC7063",
+                stroke_width=4.0,
+                max_tip_length_to_length_ratio=0.08,
+                fill_opacity=1.0
+            )
+            final_field_arrows.add(arrow)
+        
+        self.play(
+            Transform(field_arrows_group, final_field_arrows),
+            run_time=1
+        )
+        
+        # ---------- HIGHLIGHT DIPOLES ----------
+        for _ in range(2):
+            self.play(
+                *[dipole.animate.set_opacity(1).scale(1.1) for dipole in dipoles],
+                run_time=0.5
+            )
+            self.play(
+                *[dipole.animate.set_opacity(0.7).scale(1/1.1) for dipole in dipoles],
+                run_time=0.5
+            )
+        
+        self.wait(3)
