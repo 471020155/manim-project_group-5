@@ -11,6 +11,9 @@ class ContinuousFlowInductionWithDipoles(Scene):
         plate_width = 0.3
         gap = 2.5
         
+        # Adjust the entire capacitor position to be more to the LEFT
+        capacitor_x_offset = LEFT * 1.5  # Move capacitor 1.5 units to the left
+        
         left_plate = Rectangle(
             height=plate_height, 
             width=plate_width,
@@ -18,7 +21,7 @@ class ContinuousFlowInductionWithDipoles(Scene):
             fill_opacity=0.6,
             stroke_color=YELLOW,
             stroke_width=2
-        ).shift(LEFT * (gap/2 + plate_width/2))
+        ).shift(LEFT * (gap/2 + plate_width/2) + capacitor_x_offset)  # Added offset
         
         right_plate = left_plate.copy().shift(RIGHT * (gap + plate_width))
         
@@ -27,7 +30,7 @@ class ContinuousFlowInductionWithDipoles(Scene):
         self.wait(0.3)
         
         # ---------- Create Circuit ----------
-        # Simple U-shaped circuit
+        # Adjust wire positions accordingly
         left_wire_start = left_plate.get_left() + LEFT * 2
         right_wire_end = right_plate.get_right() + RIGHT * 2
         
@@ -56,12 +59,14 @@ class ContinuousFlowInductionWithDipoles(Scene):
                      fill_color=WHITE, fill_opacity=1, 
                      stroke_color=WHITE, stroke_width=2),
             Line(UP*0.35, DOWN*0.35, color=BLACK, stroke_width=2),
-            Text("+", font_size=14, color=BLACK, weight=BOLD),
-            Text("−", font_size=14, color=BLACK, weight=BOLD),
+            Text("+", font_size=18, color=BLACK, weight=BOLD),
+            Text("−", font_size=18, color=BLACK, weight=BOLD),
         )
         battery.move_to(battery_pos)
-        battery[2].move_to(battery.get_center() + LEFT*0.1 + UP*0.15)
-        battery[3].move_to(battery.get_center() + LEFT*0.1 + DOWN*0.15)
+        
+        # وضع إشارتي + و - جنباً إلى جنب
+        battery[2].move_to(battery.get_center() + RIGHT * 0.15)  # + on right side
+        battery[3].move_to(battery.get_center() + LEFT * 0.15)   # - on left side
         
         self.play(Create(battery), run_time=0.8)
         
@@ -71,54 +76,45 @@ class ContinuousFlowInductionWithDipoles(Scene):
         self.play(Write(title))
         
         # ---------- Create DIPOLES in capacitor gap ----------
-        # Create small yellow dipoles (arrows with + and -)
-        num_dipoles = 5  # Number of dipoles to create
-        dipoles = []  # Store dipoles for animation
-        dipole_positions = []  # Store positions for dipoles
+        num_dipoles = 5
+        dipoles = []
+        dipole_positions = []
         
-        # Calculate positions for dipoles (evenly spaced in gap)
+        # Calculate positions for dipoles (adjusted with capacitor offset)
         for i in range(num_dipoles):
-            # Vertical position in capacitor gap
             y_pos = -plate_height/2 + (i + 0.5) * (plate_height / num_dipoles)
-            
-            # Horizontal position in gap (centered between plates)
-            x_pos = 0  # Center of gap
+            x_pos = capacitor_x_offset[0]  # Center of gap with offset
             
             dipole_positions.append([x_pos, y_pos, 0])
             
-            # Create dipole (arrow from positive to negative)
+            # Create dipole (arrow REVERSED - from negative to positive)
             dipole_arrow = Arrow(
-                start=LEFT * 0.3,  # Will be positioned later
-                end=RIGHT * 0.3,
-                color="#FFFF00",  # Bright yellow
+                start=RIGHT * 0.3,
+                end=LEFT * 0.3,
+                color="#FFFF00",
                 stroke_width=2,
                 buff=0.1,
                 max_tip_length_to_length_ratio=0.25
             )
             
-            # Create + and - signs
             plus_sign = Text("+", font_size=12, color="#FF5555", weight=BOLD)
             minus_sign = Text("-", font_size=12, color="#5555FF", weight=BOLD)
             
-            # Position signs at ends of arrow
-            plus_sign.next_to(dipole_arrow.get_end(), RIGHT, buff=0.08)
-            minus_sign.next_to(dipole_arrow.get_start(), LEFT, buff=0.08)
+            plus_sign.next_to(dipole_arrow.get_start(), LEFT, buff=0.08)
+            minus_sign.next_to(dipole_arrow.get_end(), RIGHT, buff=0.08)
             
-            # Create dipole group
             dipole_group = VGroup(dipole_arrow, plus_sign, minus_sign)
             dipole_group.move_to([x_pos, y_pos, 0])
             dipoles.append(dipole_group)
             
-            # Initially dipoles are small (collapsed)
-            dipole_group.scale(0.3)  # Start very small
-            dipole_group.set_opacity(0.3)  # Semi-transparent
+            dipole_group.scale(0.3)
+            dipole_group.set_opacity(0.3)
         
         # Add dipoles to scene
         dipoles_group = VGroup(*dipoles)
         self.play(FadeIn(dipoles_group), run_time=1)
         
         # ---------- Create FLOW SYSTEM ----------
-        # Define paths for continuous flow
         positive_path = VMobject()
         positive_points = [
             battery[0].get_right() + RIGHT*0.1,
@@ -141,8 +137,44 @@ class ContinuousFlowInductionWithDipoles(Scene):
         ]
         electron_path.set_points_smoothly(electron_points)
         
+        # ---------- EXPLANATION TEXTS ----------
+        explanation_texts = [
+            "1) Current flows → charges\n   accumulate on the plates.",
+            "2) Electric field increases.",
+            "3) Dipoles stretch and bound\n   charges move.",
+            "4) Bound charge motion creates\n   displacement current.",
+            "5) When charging stops,\n   dipoles stop moving.",
+            "6) Displacement  current \nstops."
+        ]
+        
+        # Create positions for explanation texts (on right side)
+        # Adjust position since capacitor moved left
+        explanation_positions = []
+        for i in range(len(explanation_texts)):
+            # Position on RIGHT side of screen, aligned to left edge
+            x_pos = right_plate.get_right()[0] + 4  # Reduced from 3.5 to 2.0 since capacitor moved left
+            y_pos = 2.5 - i * 0.8  # Start from top and go down
+            explanation_positions.append([x_pos, y_pos, 0])
+        
+        # Create all explanation texts but initially invisible
+        explanation_objects = []
+        for i, text in enumerate(explanation_texts):
+            explanation = Text(
+                text,
+                font="Arial",
+                font_size=18,
+                color=WHITE,
+                line_spacing=0.8
+            )
+            explanation.move_to(explanation_positions[i])
+            explanation.set_opacity(0)  # Initially invisible
+            explanation_objects.append(explanation)
+            self.add(explanation)
+        
+        # Track which explanation is currently shown
+        current_explanation_index = -1
+        
         # ---------- CREATE CONTINUOUS FLOW ----------
-        # Create charge positions for accumulation
         total_charges_to_accumulate = 8
         positive_positions = []
         negative_positions = []
@@ -158,17 +190,14 @@ class ContinuousFlowInductionWithDipoles(Scene):
                 positive_positions.append(right_plate.get_left() + RIGHT*x_offset + UP*y)
                 negative_positions.append(left_plate.get_right() + LEFT*x_offset + UP*y)
         
-        # Track accumulated charges
         accumulated_positive = []
         accumulated_negative = []
         
-        # Create initial flowing charges
         num_concurrent_charges = 4
-        positive_flow = []  # Moving positive charges
-        electron_flow = []  # Moving electrons
+        positive_flow = []
+        electron_flow = []
         
         for i in range(num_concurrent_charges):
-            # Positive charge
             pos_charge = Dot(
                 battery[0].get_right() + RIGHT*0.1 + UP*(i*0.1 - 0.15),
                 color="#FFAA00",
@@ -178,7 +207,6 @@ class ContinuousFlowInductionWithDipoles(Scene):
             positive_flow.append(pos_charge)
             self.add(pos_charge)
             
-            # Electron
             elec_charge = Dot(
                 left_plate.get_center() + UP*(i*0.1 - 0.15),
                 color="#00AAFF",
@@ -188,11 +216,10 @@ class ContinuousFlowInductionWithDipoles(Scene):
             electron_flow.append(elec_charge)
             self.add(elec_charge)
         
-        # ---------- ELECTRIC FIELD ARROWS THAT INCREASE IN NUMBER ----------
+        # ---------- ELECTRIC FIELD ARROWS ----------
         max_field_arrows = 8
         field_arrows_group = VGroup()
         
-        # Store arrow positions
         arrow_positions = []
         for i in range(max_field_arrows):
             y = -1.2 + (i / (max_field_arrows - 1)) * 2.4 if max_field_arrows > 1 else 0
@@ -206,6 +233,14 @@ class ContinuousFlowInductionWithDipoles(Scene):
         accumulated_count = 0
         
         for charge_num in range(total_charges_to_accumulate):
+            # Show first explanation when animation starts
+            if accumulated_count == 0 and current_explanation_index < 0:
+                current_explanation_index = 0
+                self.play(
+                    explanation_objects[current_explanation_index].animate.set_opacity(1),
+                    run_time=0.5
+                )
+            
             # Animate current flow
             animations = []
             
@@ -273,48 +308,50 @@ class ContinuousFlowInductionWithDipoles(Scene):
                         accumulated_negative.append(neg_group)
                         accumulated_count += 1
                         
-                        # Update charge count
-                        count_text = Text(f" ", font_size=20, color=WHITE)
-                        count_text.next_to(capacitor, DOWN)
-                        
-                        if accumulated_count == 1:
-                            self.play(Write(count_text))
-                        else:
-                            for mob in self.mobjects:
-                                if isinstance(mob, Text) and "Q =" in mob.text:
-                                    self.play(Transform(mob, count_text))
-                                    break
+                        # Show second explanation after first accumulation
+                        if accumulated_count == 1 and current_explanation_index == 0:
+                            current_explanation_index = 1
+                            self.play(
+                                explanation_objects[current_explanation_index].animate.set_opacity(1),
+                                run_time=0.5
+                            )
                         
                         # ========== ANIMATE DIPOLES STRETCHING ==========
-                        # Calculate stretch factor based on accumulated charges
                         stretch_factor = 0.3 + (accumulated_count / total_charges_to_accumulate) * 1.2
                         opacity_factor = 0.3 + (accumulated_count / total_charges_to_accumulate) * 0.7
                         
                         # Create new stretched dipoles
                         stretched_dipoles = []
                         for j, pos in enumerate(dipole_positions):
-                            # Create new dipole with increased size
                             new_dipole_arrow = Arrow(
-                                start=LEFT * (0.3 * stretch_factor),
-                                end=RIGHT * (0.3 * stretch_factor),
+                                start=RIGHT * (0.3 * stretch_factor),
+                                end=LEFT * (0.3 * stretch_factor),
                                 color="#FFFF00",
-                                stroke_width=1 + accumulated_count * 0.3,  # Thicker with more charge
+                                stroke_width=1 + accumulated_count * 0.3,
                                 buff=0.1,
                                 max_tip_length_to_length_ratio=0.25
                             )
                             
-                            new_plus = Text(" ", font_size=12 + accumulated_count, 
+                            new_plus = Text("+", font_size=12 + accumulated_count, 
                                           color="#FF5555", weight=BOLD)
-                            new_minus = Text(" ", font_size=12 + accumulated_count, 
+                            new_minus = Text("-", font_size=12 + accumulated_count, 
                                            color="#5555FF", weight=BOLD)
                             
-                            new_plus.next_to(new_dipole_arrow.get_end(), RIGHT, buff=0.08)
-                            new_minus.next_to(new_dipole_arrow.get_start(), LEFT, buff=0.08)
+                            new_plus.next_to(new_dipole_arrow.get_start(), LEFT, buff=0.08)
+                            new_minus.next_to(new_dipole_arrow.get_end(), RIGHT, buff=0.08)
                             
                             new_dipole = VGroup(new_dipole_arrow, new_plus, new_minus)
                             new_dipole.move_to(pos)
                             new_dipole.set_opacity(opacity_factor)
                             stretched_dipoles.append(new_dipole)
+                        
+                        # Show third explanation when dipoles start stretching
+                        if accumulated_count == 3 and current_explanation_index == 1:
+                            current_explanation_index = 2
+                            self.play(
+                                explanation_objects[current_explanation_index].animate.set_opacity(1),
+                                run_time=0.5
+                            )
                         
                         # Animate dipoles stretching
                         self.play(
@@ -361,6 +398,14 @@ class ContinuousFlowInductionWithDipoles(Scene):
                                     Transform(field_arrows_group, new_field_arrows),
                                     run_time=0.5
                                 )
+                        
+                        # Show fourth explanation when field arrows appear
+                        if accumulated_count == 5 and current_explanation_index == 2:
+                            current_explanation_index = 3
+                            self.play(
+                                explanation_objects[current_explanation_index].animate.set_opacity(1),
+                                run_time=0.5
+                            )
                         
                         # Reset charges for continuous flow
                         positive_flow[i] = Dot(
@@ -439,9 +484,13 @@ class ContinuousFlowInductionWithDipoles(Scene):
             self.wait(0.2)
         
         # ---------- GRADUALLY STOP CURRENT ----------
-        current_label = Text(" ", color="#FFAA00", font_size=18)
-        current_label.next_to(bottom_wire, DOWN)
-        self.play(Write(current_label))
+        # Show fifth explanation when current starts stopping
+        if current_explanation_index == 3:
+            current_explanation_index = 4
+            self.play(
+                explanation_objects[current_explanation_index].animate.set_opacity(1),
+                run_time=0.5
+            )
         
         for i in range(num_concurrent_charges):
             if positive_flow[i] is not None:
@@ -450,30 +499,20 @@ class ContinuousFlowInductionWithDipoles(Scene):
                 self.play(FadeOut(electron_flow[i]), run_time=0.3)
             self.wait(0.1)
         
-        self.remove(current_label)
-        
         # ---------- FINAL STATE ----------
-        final_title = Text("CAPACITOR FULLY CHARGED", color=YELLOW, font_size=26, weight=BOLD)
+        final_title = Text("CAPACITOR FULLY CHARGED", color=YELLOW, font_size=24)
         final_title.to_edge(UP)
         
-        # Add dipoles label
-        dipoles_label = Text(f" ", 
-                           color="#FFFF00", font_size=18)
-        dipoles_label.next_to(dipoles_group, DOWN)
-        
-        summary = VGroup(
-            Text(f" ", color="#FF5555", font_size=20),
-            Text(f" ", color="#5555FF", font_size=20),
-            Text("Current: 0", color="#FFAA00", font_size=20),
-            Text(f" ", color="#FFFF00", font_size=20),
-        )
-        summary.arrange(DOWN, aligned_edge=LEFT, buff=0.15)
-        summary.to_edge(RIGHT).shift(DOWN*0.5)
+        # Show final explanation
+        if current_explanation_index == 4:
+            current_explanation_index = 5
+            self.play(
+                explanation_objects[current_explanation_index].animate.set_opacity(1),
+                run_time=0.5
+            )
         
         self.play(
             Transform(title, final_title),
-            Write(dipoles_label),
-            Write(summary),
             run_time=1.5
         )
         
@@ -483,7 +522,7 @@ class ContinuousFlowInductionWithDipoles(Scene):
             arrow = Arrow(
                 start,
                 end,
-                color="#00FF88",
+                color="#EC7063",
                 stroke_width=4.0,
                 max_tip_length_to_length_ratio=0.08,
                 fill_opacity=1.0
@@ -495,13 +534,7 @@ class ContinuousFlowInductionWithDipoles(Scene):
             run_time=1
         )
         
-        field_label = Text(f" ", 
-                          color="#00FF88", font_size=18)
-        field_label.next_to(field_arrows_group, UP)
-        self.play(Write(field_label))
-        
         # ---------- HIGHLIGHT DIPOLES ----------
-        # Make dipoles pulse to show they're fully stretched
         for _ in range(2):
             self.play(
                 *[dipole.animate.set_opacity(1).scale(1.1) for dipole in dipoles],
