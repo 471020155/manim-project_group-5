@@ -3,13 +3,13 @@ import numpy as np
 
 # ---------- Colors & Style ----------
 BACKGROUND_COLOR = "#0b132b"
-FIELD_STRONG = "#58D68D" # Bright Green
-FIELD_WEAK = "#1D8348"   # Dark Green
+FIELD_COLOR = RED  # Changed from GREEN to RED
+FIELD_WEAK = "#FF6B6B"   # Lighter Red for weak field
 POS_COLOR = "#E74C3C"    # Red
 NEG_COLOR = "#3498DB"    # Blue
 DIELECTRIC_COLOR = GRAY
 
-class CompactHorizontalCapacitor(Scene):
+class CompactHorizontalCapacitorRed(Scene):
     def construct(self):
         self.camera.background_color = BACKGROUND_COLOR
 
@@ -17,11 +17,11 @@ class CompactHorizontalCapacitor(Scene):
         divider = Line(UP*4, DOWN*4, color=GRAY)
         self.add(divider)
 
-        # Labels: 1st Line Green, 2nd Line Yellow
-        title_e = Text("The E-Field", font_size=24, color=FIELD_STRONG).to_corner(UL).shift(RIGHT*0.5)
+        # Labels: 1st Line Red, 2nd Line Yellow
+        title_e = Text("The E-Field", font_size=24, color=FIELD_COLOR).to_corner(UL).shift(RIGHT*0.5)
         text_e = Text("Affected by Bound Charges", font_size=18, color=YELLOW).next_to(title_e, DOWN, aligned_edge=LEFT)
         
-        title_d = Text("The D-Field", font_size=24, color=FIELD_STRONG).to_corner(UR).shift(LEFT*0.5)
+        title_d = Text("The D-Field", font_size=24, color=FIELD_COLOR).to_corner(UR).shift(LEFT*0.5)
         text_d = Text("Independent of Material", font_size=18, color=YELLOW).next_to(title_d, DOWN, aligned_edge=RIGHT)
         
         self.add(title_e, text_e, title_d, text_d)
@@ -51,13 +51,13 @@ class CompactHorizontalCapacitor(Scene):
             
             # --- 1. Air (Top - Strong) ---
             e_elements.add(Line(center_L + RIGHT*x + UP*top_y, center_L + RIGHT*x + UP*interface_T, 
-                                color=FIELD_STRONG, stroke_width=4))
+                                color=FIELD_COLOR, stroke_width=4))
 
-            # --- 2. Reflection (Green) ---
+            # --- 2. Reflection (Red) ---
             if i % 3 == 0:
                 refl_start = center_L + RIGHT*x + UP*interface_T
                 refl_end = refl_start + UP*0.2 + RIGHT*0.1
-                e_elements.add(Arrow(refl_start, refl_end, color=FIELD_STRONG, stroke_width=2, tip_length=0.08, buff=0))
+                e_elements.add(Arrow(refl_start, refl_end, color=FIELD_COLOR, stroke_width=2, tip_length=0.08, buff=0))
 
             # --- 3. Inside (Attenuation & Bending) ---
             if i % 1.5 < 1:
@@ -67,7 +67,7 @@ class CompactHorizontalCapacitor(Scene):
                 
                 # --- 4. Air (Bottom - Strong) ---
                 e_elements.add(Arrow(center_L + RIGHT*bend_x + UP*interface_B, center_L + RIGHT*bend_x + UP*bot_y, 
-                                     color=FIELD_STRONG, stroke_width=4, tip_length=0.15, buff=0))
+                                     color=FIELD_COLOR, stroke_width=4, tip_length=0.15, buff=0))
 
         # Polarization Sheets
         bound_charges = VGroup()
@@ -92,10 +92,10 @@ class CompactHorizontalCapacitor(Scene):
 
         d_lines = VGroup()
         for x in np.linspace(-1.4, 1.4, num_cols):
-            # Straight Green arrows ignoring the gap and slab
+            # Straight Red arrows ignoring the gap and slab
             d_lines.add(Arrow(center_R + RIGHT*x + UP*(plate_offset-0.1), 
                               center_R + RIGHT*x + DOWN*(plate_offset-0.1), 
-                              color=FIELD_STRONG, stroke_width=4, tip_length=0.2, buff=0))
+                              color=FIELD_COLOR, stroke_width=4, tip_length=0.2, buff=0))
 
         self.play(Create(d_lines), run_time=1.5)
         self.wait(5)
