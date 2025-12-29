@@ -1,0 +1,45 @@
+from manim import *
+
+# ---------- Background ----------
+BACKGROUND_COLOR = "#0b132b"   # Dark blue
+
+# ---------- Colors ----------
+TEXT_COLOR = WHITE
+SUBTITLE_COLOR = "#D3D3D3"  # Light gray for subtitle
+
+# ---------- Fonts ----------
+FONT_SIZE_BIG = 72   
+FONT_SIZE_SMALL = 36  # Subtitle font size
+
+# ---------- Timing ----------
+DEFAULT_RUN_TIME = 1
+WAIT_MEDIUM = 1
+
+class DipoleTypesIntro(Scene):
+    def construct(self):
+        self.camera.background_color = BACKGROUND_COLOR
+
+        # ---------- Title ----------
+        title = Text(
+            "Types of Dipoles",
+            font="Arial Black",
+            font_size=FONT_SIZE_BIG,
+            weight=BOLD,           
+            color=TEXT_COLOR
+        )
+
+        # ---------- Subtitle ----------
+        subtitle = Text(
+            "Different polarization cases",
+            font="Arial",
+            font_size=FONT_SIZE_SMALL,
+            color=SUBTITLE_COLOR
+        )
+        subtitle.next_to(title, DOWN, buff=0.5)  # 0.5 units below title
+
+        # ---------- Animate ----------
+        self.play(Write(title), run_time=DEFAULT_RUN_TIME)
+        self.play(FadeIn(subtitle), run_time=DEFAULT_RUN_TIME)
+        self.wait(WAIT_MEDIUM)
+        self.play(FadeOut(VGroup(title, subtitle)), run_time=DEFAULT_RUN_TIME)
+        self.wait(0.5)
