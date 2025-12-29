@@ -1,6 +1,5 @@
 from manim import *
 
-# ---------- Colors & settings ----------
 BACKGROUND_COLOR = "#0b132b"
 TEXT_COLOR = WHITE
 NEGATIVE_COLOR = "#5DADE2"
@@ -10,7 +9,6 @@ FIELD_COLOR = RED
 
 SIGN_FONT_SIZE = 25
 TEXT_FONT_SIZE = 28
-LINE_SPACING = 2   # Vertical spacing between lines
 
 class LowerPartOnly(Scene):
     def construct(self):
@@ -18,22 +16,44 @@ class LowerPartOnly(Scene):
 
         atom_radius = 0.7
 
-        # ================= 1️⃣ Text =================
-        line1 = Text("Applying electric field (E),", font_size=TEXT_FONT_SIZE, color=TEXT_COLOR)
-        line2 = Text("the material starts to", font_size=TEXT_FONT_SIZE, color=TEXT_COLOR)
-        line3 = Text("POLARIZE", font_size=TEXT_FONT_SIZE, color=TEXT_COLOR)
+        # Text lines - start from top
+        line1 = Text("Applying electric field (E),", font_size=TEXT_FONT_SIZE, color=TEXT_COLOR, font="Arial")\
+            .to_edge(UP).shift(DOWN * 0.9)  # Move down more
+        
+        line2 = Text("the material starts to", font_size=TEXT_FONT_SIZE, color=TEXT_COLOR, font="Arial")\
+            .next_to(line1, DOWN, buff=0.3)
+        
+        line3 = Text("POLARIZE (stretching)", font_size=TEXT_FONT_SIZE, color=TEXT_COLOR, font="Arial")\
+            .next_to(line2, DOWN, buff=0.3)
+        
+        line4 = Text("and it represents the material's ability", font_size=TEXT_FONT_SIZE, color=TEXT_COLOR, font="Arial")\
+            .next_to(line3, DOWN, buff=0.3)
+        
+        line5 = Text("to store electric field, called", font_size=TEXT_FONT_SIZE, color=TEXT_COLOR, font="Arial")\
+            .next_to(line4, DOWN, buff=0.3)
+        
+        # "permittivity ε" in larger font size on its own line
+        line6_part1 = Text("permittivity", font_size=TEXT_FONT_SIZE + 6, color=YELLOW, font="Times New Roman")
+        line6_part2 = Text(" ε", font_size=TEXT_FONT_SIZE + 6, color=YELLOW, font="Times New Roman")
+        
+        line6 = VGroup(line6_part1, line6_part2).arrange(RIGHT, buff=0.05)\
+            .next_to(line5, DOWN, buff=0.4)
 
-        line2.next_to(line1, DOWN, buff=0.5)  # buff controls vertical spacing
-        line3.next_to(line2, DOWN, buff=0.5)
+        text_group = VGroup(line1, line2, line3, line4, line5, line6)
 
-        text_below = VGroup(line1, line2, line3).to_edge(LEFT)
-        self.play(FadeIn(text_below))
-        self.play(FadeIn(text_below))
+        # Move text to right side after showing from top
+        self.play(FadeIn(text_group))
         self.wait(0.5)
+        
+        self.play(
+            text_group.animate.to_edge(RIGHT).shift(DOWN * 0.1 + LEFT * 0.4),  # Down instead of up
+            run_time=0.8
+        )
 
-        # ================= Atom (circle) =================
+        # Atom outline
         atom_outline = Circle(radius=atom_radius, stroke_width=3, color=ATOM_OUTLINE_COLOR)
 
+        # Charge regions
         negative_fill = Sector(
             radius=atom_radius - 0.03,
             start_angle=PI / 2,
@@ -52,8 +72,12 @@ class LowerPartOnly(Scene):
             stroke_width=0
         )
 
+        # Charge signs
         negative_sign = Text("-", font_size=SIGN_FONT_SIZE, color=TEXT_COLOR).shift(LEFT * 0.25)
         positive_sign = Text("+", font_size=SIGN_FONT_SIZE, color=TEXT_COLOR).shift(RIGHT * 0.25)
+
+        # Atom position
+        atom_center = LEFT * 3 + DOWN * 0.3
 
         atom_group = VGroup(
             atom_outline,
@@ -61,15 +85,15 @@ class LowerPartOnly(Scene):
             positive_fill,
             negative_sign,
             positive_sign
-        ).to_edge(RIGHT).shift(DOWN * 0.001+ LEFT * 4)
+        ).move_to(atom_center)
 
-        self.add(atom_group)
+        self.play(FadeIn(atom_group))
 
-        # ================= 2️⃣ Electric field arrows =================
+        # Electric field arrows
         arrows = VGroup()
-        x_start = -2
-        x_end = 7
-        y_base = atom_outline.get_top()[1] - 1.8
+        x_start = -6
+        x_end = -1
+        y_base = atom_center[1] - 1.2
 
         for i in range(4):
             y = y_base + i * 0.7
@@ -78,20 +102,21 @@ class LowerPartOnly(Scene):
                 end=[x_end, y, 0],
                 color=FIELD_COLOR,
                 stroke_width=5,
-                buff=0
+                buff=0,
+                tip_length=0.2
             )
             arrows.add(arrow)
 
         self.play(*[GrowArrow(a) for a in arrows], run_time=2)
         self.wait(0.5)
 
-        # ================= 3️⃣ Transform atom to ellipse =================
+        # Deformed atom shape
         ellipse_outline = Ellipse(
             width=2.55,
             height=1.35,
             color=ATOM_OUTLINE_COLOR,
             stroke_width=3
-        )
+        ).move_to(atom_center)
 
         negative_fill_ellipse = negative_fill.copy().stretch(2, 0).shift(LEFT * 0.6)
         positive_fill_ellipse = positive_fill.copy().stretch(2, 0).shift(RIGHT * 0.6)
@@ -99,11 +124,10 @@ class LowerPartOnly(Scene):
         negative_sign_ellipse = negative_sign.copy().shift(LEFT * 0.6)
         positive_sign_ellipse = positive_sign.copy().shift(RIGHT * 0.6)
 
-        ellipse_outline.move_to(atom_outline.get_center())
-        negative_fill_ellipse.move_to(atom_outline.get_center() + LEFT * 0.6)
-        positive_fill_ellipse.move_to(atom_outline.get_center() + RIGHT * 0.6)
-        negative_sign_ellipse.move_to(atom_outline.get_center() + LEFT * 0.6)
-        positive_sign_ellipse.move_to(atom_outline.get_center() + RIGHT * 0.6)
+        negative_fill_ellipse.move_to(atom_center + LEFT * 0.6)
+        positive_fill_ellipse.move_to(atom_center + RIGHT * 0.6)
+        negative_sign_ellipse.move_to(atom_center + LEFT * 0.6)
+        positive_sign_ellipse.move_to(atom_center + RIGHT * 0.6)
 
         self.play(
             ReplacementTransform(atom_outline, ellipse_outline),
@@ -114,4 +138,4 @@ class LowerPartOnly(Scene):
             run_time=1.5
         )
 
-        self.wait(1)
+        self.wait(3)
