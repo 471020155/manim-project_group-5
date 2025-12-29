@@ -1,0 +1,196 @@
+from manim import *
+
+BACKGROUND_COLOR = "#0b132b"
+TEXT_COLOR = WHITE
+POSITIVE_COLOR = "#EC7063"
+NEGATIVE_COLOR = "#5DADE2"
+WAVE_COLOR = "#58D68D"
+DIPOLE_COLOR = YELLOW
+
+TITLE_FONT_SIZE = 35
+WAVE_FONT_SIZE = 22
+DIPOLE_FONT_SIZE = 18
+
+class DipoleFrequencyResponse(Scene):
+    def construct(self):
+        self.camera.background_color = BACKGROUND_COLOR
+        
+        top_title = Text(
+            "Dipole Response to Different Frequencies",
+            font="Arial Black",
+            font_size=TITLE_FONT_SIZE,
+            color=TEXT_COLOR
+        ).to_edge(UP, buff=0.3)
+        
+        self.play(Write(top_title))
+        self.wait(0.5)
+        
+        slow_wave_label = Text(
+            "Lower Frequency Wave",
+            font="Arial Black",
+            font_size=WAVE_FONT_SIZE,
+            color=WAVE_COLOR
+        ).shift(UP * 1.5 + LEFT * 3.5)
+        
+        slow_wave = FunctionGraph(
+            lambda x: 0.5 * np.sin(2 * x),
+            x_range=[-3, 3],
+            color=WAVE_COLOR,
+            stroke_width=3
+        ).shift(UP * 0.8 + LEFT * 3.5)
+        
+        slow_dot = Dot(color=WAVE_COLOR, radius=0.08)
+        slow_dot.move_to(slow_wave.get_start())
+        
+        slow_dipole_label = Text(
+            "Dipole Response",
+            font="Arial Black",
+            font_size=WAVE_FONT_SIZE,
+            color=DIPOLE_COLOR
+        ).shift(UP * 1.5 + RIGHT * 3.5)
+        
+        slow_dipole_arrow = Arrow(
+            start=LEFT * 0.5,
+            end=RIGHT * 0.5,
+            color=DIPOLE_COLOR,
+            stroke_width=4,
+            buff=0.1,
+            max_tip_length_to_length_ratio=0.2
+        ).shift(UP * 0.8 + RIGHT * 3.5)
+        
+        slow_plus = Text("+", font_size=24, color=POSITIVE_COLOR)
+        slow_minus = Text("-", font_size=24, color=NEGATIVE_COLOR)
+        
+        slow_minus.next_to(slow_dipole_arrow.get_start(), LEFT, buff=0.15)
+        slow_plus.next_to(slow_dipole_arrow.get_end(), RIGHT, buff=0.15)
+        
+        slow_dipole_group = VGroup(slow_dipole_arrow, slow_plus, slow_minus)
+        
+        self.play(
+            FadeIn(slow_wave_label),
+            Create(slow_wave),
+            FadeIn(slow_dot),
+            FadeIn(slow_dipole_label),
+            Create(slow_dipole_group),
+            run_time=1.5
+        )
+        self.wait(0.5)
+        
+        fast_wave_label = Text(
+            "Higher Frequency Wave",
+            font="Arial Black",
+            font_size=WAVE_FONT_SIZE,
+            color=WAVE_COLOR
+        ).shift(DOWN * 1.0 + LEFT * 3.5)
+        
+        fast_wave = FunctionGraph(
+            lambda x: 0.5 * np.sin(4 * x),
+            x_range=[-3, 3],
+            color=WAVE_COLOR,
+            stroke_width=3
+        ).shift(DOWN * 1.7 + LEFT * 3.5)
+        
+        fast_dot = Dot(color=WAVE_COLOR, radius=0.08)
+        fast_dot.move_to(fast_wave.get_start())
+        
+        fast_dipole_label = Text(
+            "Dipole Response",
+            font="Arial Black",
+            font_size=WAVE_FONT_SIZE,
+            color=DIPOLE_COLOR
+        ).shift(DOWN * 1.0 + RIGHT * 3.5)
+        
+        fast_dipole_arrow = Arrow(
+            start=LEFT * 0.5,
+            end=RIGHT * 0.5,
+            color=DIPOLE_COLOR,
+            stroke_width=4,
+            buff=0.1,
+            max_tip_length_to_length_ratio=0.2
+        ).shift(DOWN * 1.7 + RIGHT * 3.5)
+        
+        fast_plus = Text("+", font_size=24, color=POSITIVE_COLOR)
+        fast_minus = Text("-", font_size=24, color=NEGATIVE_COLOR)
+        
+        fast_minus.next_to(fast_dipole_arrow.get_start(), LEFT, buff=0.15)
+        fast_plus.next_to(fast_dipole_arrow.get_end(), RIGHT, buff=0.15)
+        
+        fast_dipole_group = VGroup(fast_dipole_arrow, fast_plus, fast_minus)
+        
+        self.play(
+            FadeIn(fast_wave_label),
+            Create(fast_wave),
+            FadeIn(fast_dot),
+            FadeIn(fast_dipole_label),
+            Create(fast_dipole_group),
+            run_time=1.5
+        )
+        self.wait(0.5)
+        
+        num_cycles = 4
+        slow_duration = 8
+        fast_duration = 4
+        
+        steps_per_cycle = 20
+        total_steps = num_cycles * steps_per_cycle
+        
+        for step in range(total_steps):
+            progress = step / total_steps
+            
+            slow_wave_progress = progress
+            slow_x = -3 + 6 * slow_wave_progress
+            slow_y = 0.5 * np.sin(2 * slow_x)
+            slow_dot_pos = np.array([slow_x, slow_y, 0]) + np.array([-3.5, 0.8, 0])
+            
+            slow_stretch = 1 + 0.8 * np.sin(2 * slow_x)
+            
+            fast_wave_progress = progress * 2
+            if fast_wave_progress > 1:
+                fast_wave_progress = fast_wave_progress % 1
+            fast_x = -3 + 6 * fast_wave_progress
+            fast_y = 0.5 * np.sin(4 * fast_x)
+            fast_dot_pos = np.array([fast_x, fast_y, 0]) + np.array([-3.5, -1.7, 0])
+            
+            fast_stretch = 1 + 0.8 * np.sin(4 * fast_x)
+            
+            slow_animations = [
+                slow_dot.animate.move_to(slow_dot_pos),
+                slow_dipole_arrow.animate.scale_to_fit_width(slow_stretch * 1.0, about_point=slow_dipole_arrow.get_center())
+            ]
+            
+            fast_animations = [
+                fast_dot.animate.move_to(fast_dot_pos),
+                fast_dipole_arrow.animate.scale_to_fit_width(fast_stretch * 1.0, about_point=fast_dipole_arrow.get_center())
+            ]
+            
+            step_duration = slow_duration / total_steps
+            self.play(
+                *slow_animations,
+                *fast_animations,
+                run_time=step_duration,
+                rate_func=linear
+            )
+        
+        summary_text = Text(
+            "Dipole stretching/contraction speed depends on wave frequency",
+            font="Arial Black",
+            font_size=22,
+            color=TEXT_COLOR
+        )
+        summary_text.to_edge(DOWN, buff=0.5)
+        
+        self.play(FadeIn(summary_text))
+        self.wait(1)
+        
+        explanation_text = Text(
+            "Lower frequency = Slower dipole response\nHigher frequency = Faster dipole response",
+            font="Arial Black",
+            font_size=20,
+            color=WAVE_COLOR,
+            line_spacing=0.8
+        )
+        explanation_text.next_to(summary_text, UP, buff=0.3)
+        
+        self.play(FadeIn(explanation_text))
+        
+        self.wait(3)
