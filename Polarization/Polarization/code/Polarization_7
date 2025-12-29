@@ -1,0 +1,109 @@
+from manim import *
+
+BACKGROUND_COLOR = "#0b132b"
+TEXT_COLOR = WHITE
+NEGATIVE_COLOR = "#5DADE2"
+POSITIVE_COLOR = "#EC7063"
+FIELD_COLOR = RED
+DIPOLE_ARROW_COLOR = YELLOW
+
+SIGN_FONT_SIZE = 30
+TEXT_FONT_SIZE = 28
+TITLE_FONT_SIZE = 45
+SUBTITLE_FONT_SIZE = 18
+LINE_SPACING = 0.5
+SUBTITLE_TO_TEXT_SPACING = 0.5
+
+class OrientationPolarization(Scene):
+    def construct(self):
+        self.camera.background_color = BACKGROUND_COLOR
+
+        title = Text(
+            "3) Orientation polarization",
+            font="Arial Black",
+            font_size=TITLE_FONT_SIZE,
+            color=TEXT_COLOR
+        ).to_edge(UP + LEFT)
+
+        subtitle1 = Text(
+            "\nPermanent dipoles already exist",
+            font="Arial Black",
+            font_size=TEXT_FONT_SIZE,
+            color=TEXT_COLOR
+        )
+        
+        subtitle2 = Text(
+            "Applied E causes dipoles \n\nto rotate and align with E",
+            font="Arial Black",
+            font_size=TEXT_FONT_SIZE,
+            color=TEXT_COLOR
+        )
+
+        subtitle1.next_to(title, DOWN, buff=0.5).align_to(title, LEFT)
+        subtitle2.next_to(subtitle1, DOWN, buff=LINE_SPACING).align_to(subtitle1, LEFT)
+
+        text_group = VGroup(title, subtitle1, subtitle2).to_edge(LEFT)
+        self.play(FadeIn(text_group))
+        self.wait(0.5)
+
+        num_arrows = 25
+        random_arrows = VGroup()
+        
+        vertical_shift = UP * 0.8
+        
+        for i in range(num_arrows):
+            x_pos = np.random.uniform(2, 6)
+            y_pos = np.random.uniform(-2, 1.5)
+            
+            angle = np.random.uniform(0, 2*PI)
+            
+            arrow = Arrow(
+                start=[x_pos - 0.3 * np.cos(angle), y_pos - 0.3 * np.sin(angle), 0],
+                end=[x_pos + 0.3 * np.cos(angle), y_pos + 0.3 * np.sin(angle), 0],
+                color=DIPOLE_ARROW_COLOR,
+                stroke_width=3,
+                buff=0.1,
+                max_tip_length_to_length_ratio=0.3
+            )
+            random_arrows.add(arrow)
+
+        self.play(*[GrowArrow(arrow) for arrow in random_arrows], run_time=1.5)
+        self.wait(0.5)
+
+        arrows = VGroup()
+        x_start = 1
+        x_end = 7
+        y_base = -2.2
+
+        for i in range(6):
+            y = y_base + i * 0.7
+            arrow = Arrow(
+                start=[x_start, y, 0],
+                end=[x_end, y, 0],
+                color=FIELD_COLOR,
+                stroke_width=5,
+                buff=0
+            )
+            arrows.add(arrow)
+
+        self.play(
+            *[GrowArrow(a) for a in arrows], 
+            run_time=2
+        )
+        self.wait(0.5)
+
+        target_angle = 0
+        
+        rotation_animations = []
+        for arrow in random_arrows:
+            start = arrow.get_start()
+            end = arrow.get_end()
+            current_angle = np.arctan2(end[1] - start[1], end[0] - start[0])
+            
+            rotation_angle = target_angle - current_angle
+            
+            rotation_animations.append(Rotate(arrow, rotation_angle, about_point=arrow.get_center()))
+        
+        self.play(*rotation_animations, run_time=2)
+
+        self.wait(3)
