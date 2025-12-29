@@ -34,7 +34,7 @@ Ionic
 
 Orientation 
 
-⁂ Current in a Capacitor
+⁂ Current in Capacitor
 
 Capacitor behavior in DC and AC circuits.
 
