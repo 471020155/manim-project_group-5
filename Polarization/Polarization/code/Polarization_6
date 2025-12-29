@@ -1,0 +1,253 @@
+from manim import *
+
+BACKGROUND_COLOR = "#0b132b"
+TEXT_COLOR = WHITE
+NEGATIVE_COLOR = "#5DADE2"
+POSITIVE_COLOR = "#EC7063"
+FIELD_COLOR = RED
+DIPOLE_ARROW_COLOR = YELLOW
+
+SIGN_FONT_SIZE = 30
+TEXT_FONT_SIZE = 28
+TITLE_FONT_SIZE = 50
+SUBTITLE_FONT_SIZE = 18
+LINE_SPACING = 0.5
+SUBTITLE_TO_TEXT_SPACING = 0.5
+
+class IonicDipoles(Scene):
+    def construct(self):
+        self.camera.background_color = BACKGROUND_COLOR
+
+        title = Text(
+            "2) Ionic dipoles",
+            font_size=TITLE_FONT_SIZE,
+            color=TEXT_COLOR
+        ).to_edge(UP + LEFT)
+
+        subtitle = Text(
+            "When the electric field is applied to an ionic dielectric",
+            font_size=SUBTITLE_FONT_SIZE,
+            color=TEXT_COLOR
+        ).next_to(title, DOWN, buff=0)
+
+        line1 = Text("Positive ions move", font_size=TEXT_FONT_SIZE, color=TEXT_COLOR)
+        line2 = Text("along E → → ", font_size=TEXT_FONT_SIZE, color=TEXT_COLOR)
+        line3 = Text("Negative ions move", font_size=TEXT_FONT_SIZE, color=TEXT_COLOR)
+        line4 = Text("opposite to E ← ←", font_size=TEXT_FONT_SIZE, color=TEXT_COLOR)
+
+        line1.next_to(subtitle, DOWN, buff=SUBTITLE_TO_TEXT_SPACING).align_to(subtitle, LEFT)
+        line2.next_to(line1, DOWN, buff=LINE_SPACING).align_to(line1, LEFT)
+        line3.next_to(line2, DOWN, buff=LINE_SPACING).align_to(line1, LEFT)
+        line4.next_to(line3, DOWN, buff=LINE_SPACING).align_to(line1, LEFT)
+
+        text_group = VGroup(title, subtitle, line1, line2, line3, line4).to_edge(LEFT)
+        self.play(FadeIn(text_group))
+        self.wait(0.5)
+
+        positive_circle = Circle(
+            radius=0.4,
+            color=POSITIVE_COLOR,
+            fill_opacity=1,
+            stroke_width=3,
+            stroke_color=WHITE
+        )
+        
+        negative_circle = Circle(
+            radius=0.4,
+            color=NEGATIVE_COLOR,
+            fill_opacity=1,
+            stroke_width=3,
+            stroke_color=WHITE
+        )
+
+        initial_center = np.array([4, 0, 0])
+        positive_circle.move_to(initial_center + RIGHT * 0.4)
+        negative_circle.move_to(initial_center + LEFT * 0.4)
+
+        positive_label = Text("Na+", font_size=20, color=TEXT_COLOR)
+        negative_label = Text("Cl-", font_size=20, color=TEXT_COLOR)
+        
+        positive_label.move_to(positive_circle.get_center())
+        negative_label.move_to(negative_circle.get_center())
+
+        touching_group = VGroup(
+            positive_circle,
+            negative_circle,
+            positive_label,
+            negative_label
+        )
+
+        touching_outline = Ellipse(
+            width=1.8,
+            height=1.0,
+            color=TEXT_COLOR,
+            stroke_width=2
+        ).move_to(initial_center)
+
+        initial_label = Text(
+            " ",
+            font_size=20,
+            color=TEXT_COLOR
+        )
+        initial_label.next_to(touching_outline, DOWN, buff=0.5)
+
+        self.play(
+            FadeIn(touching_group),
+            Create(touching_outline),
+            run_time=1
+        )
+        self.play(FadeIn(initial_label))
+        self.wait(1)
+
+        arrows = VGroup()
+        x_start = 1
+        x_end = 6
+        y_base = positive_circle.get_top()[1] - 1.5
+
+        for i in range(4):
+            y = y_base + i * 0.7
+            arrow = Arrow(
+                start=[x_start, y, 0],
+                end=[x_end, y, 0],
+                color=FIELD_COLOR,
+                stroke_width=3,
+                buff=0,
+                tip_length=0.15
+            )
+            arrows.add(arrow)
+
+        self.play(
+            FadeOut(initial_label),
+            *[GrowArrow(a) for a in arrows], 
+            run_time=2
+        )
+        self.wait(0.2)
+
+        separation_distance = 1.2
+        positive_final_pos = positive_circle.get_center() + RIGHT * separation_distance
+        negative_final_pos = negative_circle.get_center() + LEFT * separation_distance
+
+        self.play(
+            positive_circle.animate.move_to(positive_final_pos),
+            negative_circle.animate.move_to(negative_final_pos),
+            positive_label.animate.move_to(positive_final_pos),
+            negative_label.animate.move_to(negative_final_pos),
+            touching_outline.animate.stretch_to_fit_width(4.0).stretch_to_fit_height(1.2).move_to(initial_center),
+            run_time=1
+        )
+
+        positive_label_new = positive_label.copy().next_to(positive_circle, DOWN, buff=0.2)
+        negative_label_new = negative_label.copy().next_to(negative_circle, DOWN, buff=0.2)
+        
+        self.play(
+            ReplacementTransform(positive_label, positive_label_new),
+            ReplacementTransform(negative_label, negative_label_new),
+            run_time=0.5
+        )
+        
+        positive_label = positive_label_new
+        negative_label = negative_label_new
+
+        self.wait(0.5)
+
+        dipole_arrows = VGroup()
+        num_arrows = 7
+        start_pos = positive_circle.get_left()
+        end_pos = negative_circle.get_right()
+        
+        for i in range(num_arrows):
+            t = i / (num_arrows - 1) if num_arrows > 1 else 0.5
+            x_pos = start_pos[0] + (end_pos[0] - start_pos[0]) * t
+            
+            base_y = (start_pos[1] + end_pos[1]) / 2
+            y_variation = 0.25 * np.sin(t * PI)
+            
+            arrow_start = np.array([x_pos + 0.15, base_y + y_variation, 0])
+            arrow_end = np.array([x_pos - 0.15, base_y + y_variation, 0])
+            
+            dipole_arrow = Arrow(
+                start=arrow_start,
+                end=arrow_end,
+                color=DIPOLE_ARROW_COLOR,
+                stroke_width=4,
+                buff=0.1,
+                max_tip_length_to_length_ratio=0.3,
+                tip_length=0.15
+            )
+            dipole_arrows.add(dipole_arrow)
+
+        self.play(
+            *[GrowArrow(arrow) for arrow in dipole_arrows],
+            run_time=1.5
+        )
+
+        dipole_label = Text(
+            "Internal electric field",
+            font_size=20,
+            color=DIPOLE_ARROW_COLOR
+        )
+        dipole_label.next_to(dipole_arrows, UP, buff=0.5)
+        
+        self.play(FadeIn(dipole_label))
+        self.wait(1)
+
+        connection_line = DashedLine(
+            start=positive_circle.get_center(),
+            end=negative_circle.get_center(),
+            color=TEXT_COLOR,
+            stroke_width=2,
+            dash_length=0.1
+        )
+        
+        self.play(Create(connection_line), run_time=1.0)
+        
+        dipole_moment_arrow = Arrow(
+            start=positive_circle.get_center() + LEFT * 0.3,
+            end=negative_circle.get_center() + RIGHT * 0.3,
+            color=DIPOLE_ARROW_COLOR,
+            stroke_width=5,
+            buff=0.1,
+            max_tip_length_to_length_ratio=0.2,
+            tip_length=0.2
+        )
+        
+        dipole_moment_label = Text(
+            " ",
+            font_size=18,
+            color=DIPOLE_ARROW_COLOR
+        )
+        dipole_moment_label.next_to(dipole_moment_arrow, UP, buff=0.2)
+        
+        self.play(
+            GrowArrow(dipole_moment_arrow),
+            FadeIn(dipole_moment_label)
+        )
+
+        summary_text = Text(
+            " ",
+            font_size=22,
+            color=TEXT_COLOR
+        )
+        summary_text.to_edge(DOWN, buff=0.5)
+        
+        self.play(FadeIn(summary_text))
+        
+        ellipse_background = Ellipse(
+            width=touching_outline.width - 0.1,
+            height=touching_outline.height - 0.1,
+            color=TEXT_COLOR,
+            fill_color=TEXT_COLOR,
+            fill_opacity=0.05,
+            stroke_width=0
+        ).move_to(touching_outline.get_center())
+        
+        self.play(FadeIn(ellipse_background), run_time=0.5)
+        
+        self.play(
+            touching_outline.animate.set_stroke(width=3),
+            ellipse_background.animate.set_fill(opacity=0.08),
+            run_time=0.5
+        )
+        
+        self.wait(1)
+        self.wait(2)
