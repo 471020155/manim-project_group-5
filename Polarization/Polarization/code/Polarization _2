@@ -1,0 +1,98 @@
+from manim import *
+
+BACKGROUND_COLOR = "#0b132b"
+TEXT_COLOR = WHITE
+NEGATIVE_COLOR = "#5DADE2"
+POSITIVE_COLOR = "#EC7063"
+ATOM_OUTLINE_COLOR = WHITE
+TEXT_FONT_SIZE = 28
+LINE_SPACING = 1.4
+GRAPHICS_AREA_X = 3.5
+
+class NeutralAtom(Scene):
+    def construct(self):
+        self.camera.background_color = BACKGROUND_COLOR
+
+        description = Text(
+            "In neutral material,\nPositive and negative charges are balanced.",
+            font="Arial",
+            font_size=TEXT_FONT_SIZE,
+            color=TEXT_COLOR,
+            line_spacing=LINE_SPACING
+        )
+        description.to_edge(RIGHT)
+
+        atom_outline = Circle(
+            radius=0.8,
+            stroke_width=4,
+            color=ATOM_OUTLINE_COLOR,
+            fill_opacity=0
+        )
+
+        positive_charges = VGroup()
+        negative_charges = VGroup()
+        
+        positions = [
+            np.array([-0.5, 0.4, 0]),
+            np.array([0.3, 0.6, 0]),
+            np.array([-0.6, -0.2, 0]),
+            np.array([0.5, 0.1, 0]),
+            np.array([-0.2, -0.5, 0]),
+            np.array([0.4, -0.4, 0]),
+            np.array([0.0, 0.2, 0]),
+            np.array([-0.1, -0.1, 0])
+        ]
+        
+        positive_indices = [0, 2, 5, 7]
+        negative_indices = [1, 3, 4, 6]
+        
+        for idx in positive_indices:
+            pos_charge = Circle(
+                radius=0.07,
+                stroke_width=1.5,
+                color=POSITIVE_COLOR,
+                fill_color=POSITIVE_COLOR,
+                fill_opacity=0.8
+            )
+            pos_charge.move_to(positions[idx])
+            plus_sign = Text("+", font_size=8, color=WHITE, weight=BOLD)
+            plus_sign.move_to(pos_charge.get_center())
+            charge_group = VGroup(pos_charge, plus_sign)
+            positive_charges.add(charge_group)
+        
+        for idx in negative_indices:
+            neg_charge = Circle(
+                radius=0.07,
+                stroke_width=1.5,
+                color=NEGATIVE_COLOR,
+                fill_color=NEGATIVE_COLOR,
+                fill_opacity=0.8
+            )
+            neg_charge.move_to(positions[idx])
+            minus_sign = Text("-", font_size=8, color=WHITE, weight=BOLD)
+            minus_sign.move_to(neg_charge.get_center())
+            charge_group = VGroup(neg_charge, minus_sign)
+            negative_charges.add(charge_group)
+
+        atom_group = VGroup(atom_outline, positive_charges, negative_charges)
+        atom_group.move_to(LEFT*GRAPHICS_AREA_X)
+
+        self.play(FadeIn(description, shift=RIGHT))
+        self.wait(0.5)
+        self.play(Create(atom_outline), run_time=1)
+        self.wait(0.3)
+        self.play(
+            LaggedStart(
+                *[FadeIn(charge) for charge in positive_charges],
+                lag_ratio=0.2
+            ),
+            run_time=1.5
+        )
+        self.play(
+            LaggedStart(
+                *[FadeIn(charge) for charge in negative_charges],
+                lag_ratio=0.2
+            ),
+            run_time=1.5
+        )
+        self.wait(2)
